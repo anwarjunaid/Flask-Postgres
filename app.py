@@ -13,25 +13,19 @@ class Task(db.Model):
 
     def __repr__(self) -> str:
         return f"{self.sno} - {self.title}"
+    
+class Users(db.Model):
+    __tablename__ = 'usertable'
+    sno = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(50), nullable=False)
+    def __repr__(self):
+        return f"(name='{self.name}', email='{self.email}', password='{self.password}')"
+
 
 with app.app_context():
     db.create_all()
-
-@app.route('/tasks', methods=['GET'])
-def getTasks():
-    tasks = Task.query.all()
-    task_list = [ {'sno':task.sno, 'title':task.title, 'desc':task.desc} for task in tasks ]
-    return jsonify({"tasks":task_list})
-
-@app.route('/addtask', methods=['POST'])
-def addTask():
-    data = request.get_json()
-    newTask = Task(sno=data['sno'], title=data['title'], desc=data['desc'])
-    db.session.add(newTask)
-    db.session.commit()
-    return jsonify({'message' : 'Task added successfully'})
-
-
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -85,6 +79,47 @@ def update(sno):
     
     todo = Task.query.get(sno)
     return render_template('update.html', todo = todo)
+
+
+# signup route
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        if name and email and password:
+            data = Users(name=name, email=email, password=password)
+            print(data)
+            db.session.add(data)
+            db.session.commit()
+            return redirect('/regsuccess')
+    return render_template("signup.html")
+
+@app.route('/regsuccess')
+def regsuccess():
+    return render_template("regsuccess.html")
+
+# singin route
+@app.route('/signin', methods=['GET', 'POST'])
+def signin():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        data = Users.query.all()
+        for task in data:
+            if task.email == email and task.password == password:
+                return redirect('/loginsuccess')
+            
+        return render_template('signin.html', error='Invalid user')
+    return render_template('signin.html')
+
+@app.route('/profile')
+def loginSuccess():
+    return render_template("profile.html")
+
+
+
 
     
 if __name__ == '__main__':

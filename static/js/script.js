@@ -62,4 +62,3 @@ function updateTodo2(sno, newData) {
         console.error('Error updating todo:', error);
     });
 }
-
